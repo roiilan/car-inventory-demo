@@ -1,0 +1,63 @@
+/* Main container styling */
+.app-container {
+  font-family: Arial, sans-serif; /* Use Arial font */
+  background-color: #f9f9f9; /* Light gray background */
+}
+
+/* Header section */
+.app-header {
+  text-align: center; /* Center align text */
+  padding: 20px; /* Padding for spacing */
+  background-color: rgb(209, 64, 129); /* Pink background */
+  color: rgb(204, 245, 172); /* Light green text */
+  border-radius: 8px; /* Rounded corners */
+  margin-bottom: 20px; /* Space below the header */
+}
+
+.app-header h1 {
+  margin: 0; /* No margin around the title */
+}
+
+.app-header p {
+  margin: 5px 0 0; /* Small margin for spacing */
+  font-size: 0.9rem; /* Slightly smaller font */
+}
+
+/* Grid container styling */
+.grid-container {
+  height: 500px; /* Fixed height for the table */
+  width: 80%; /* 80% of the parent width */
+  margin: auto; /* Center align */
+}
+
+/* Popup styling for success messages */
+.popup {
+  position: fixed;
+  top: 20%; /* Position near the top */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust positioning */
+  background-color: rgb(126, 46, 132); /* Purple background */
+  color: white; /* White text */
+  padding: 10px 20px; /* Padding for spacing */
+  border-radius: 5px; /* Rounded corners */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  z-index: 1000; /* Ensure it appears above other elements */
+}
+
+/* AG Grid specific styles */
+.ag-theme-quartz {
+  background-color: rgb(249, 245, 227); /* Table background color */
+}
+
+/* Utility classes */
+.padding-bottom {
+  height: 150px; /* Height of the bottom padding */
+  background-color: #f9f9f9; /* Different background color */
+}
+
+/* Responsive design */
+@media (max-width: 1300px) {
+  .grid-container {
+    width: 98%; /* Expand to almost full width */
+  }
+}
