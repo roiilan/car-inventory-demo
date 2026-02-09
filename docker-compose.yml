@@ -4,29 +4,35 @@ services:
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: mssql-container
+
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "YourPassword123!"
+
     ports:
       - "1433:1433"
+
     volumes:
       - mssql_data:/var/opt/mssql
       - ./db.sql:/tmp/db.sql
+
     user: root
+
     command: >
       /bin/bash -c "
       apt-get update &&
-      apt-get install -y curl apt-transport-https gnupg zip &&
+      apt-get install -y curl apt-transport-https gnupg zip wget unzip &&
       curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft.gpg &&
-      echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/20.04/prod focal main' > /etc/apt/sources.list.d/mssql-release.list &&
+      echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/20.04/prod focal main'
+        > /etc/apt/sources.list.d/mssql-release.list &&
       apt-get update &&
-      wget https://go.microsoft.com/fwlink/?linkid=2215501 -O sqlpackage.zip &&
-      unzip sqlpackage.zip -d /opt/sqlpackage &&
-      chmod +x /opt/sqlpackage/sqlpackage &&
-      echo 'export PATH=$PATH:/opt/sqlpackage:/opt/mssql-tools/bin' >> ~/.bashrc &&
       ACCEPT_EULA=Y apt-get install -y mssql-tools &&
       chown -R mssql:mssql /var/opt/mssql &&
-      /opt/mssql/bin/sqlservr & sleep 30 &&
+      /opt/mssql/bin/sqlservr &
+
+      echo 'Waiting for SQL Server...' &&
+      sleep 30 &&
+
       RETRY_COUNT=0 &&
       until /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123! -i /tmp/db.sql; do
         RETRY_COUNT=$((RETRY_COUNT + 1)) &&
@@ -37,30 +43,50 @@ services:
           exit 1
         fi
       done &&
+
       wait
       "
+
+    #  HEALTHCHECK - Docker checks if SQL is really ready
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123! -Q \"SELECT 1\" || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   backend:
     build: ./backend
     container_name: backend
+
     ports:
-      - "5000:5000"  # Expose backend service on port 5000
+      - "5000:5000"
+
     environment:
-      - JWT_SECRET=mysecretkey  # Secret key for JWT
-      - DB_HOST=database  # Database hostname
-      - DB_USER=sa  # Database username
-      - DB_PASSWORD=YourPassword123!  # Database password
-      - DB_NAME=Cars  # Database name
+      JWT_SECRET: mysecretkey
+      DB_HOST: database
+      DB_USER: sa
+      DB_PASSWORD: YourPassword123!
+      DB_NAME: Cars
+
+    #  Backend waits until DB is healthy
     depends_on:
-      - database  # Ensure the database starts before backend
+      database:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
     container_name: frontend
+
     ports:
-      - "3000:3000"  # Expose frontend service on port 3000
+      - "3000:3000"
+
     depends_on:
-      - backend  # Ensure backend starts before frontend
+      - backend
 
 volumes:
-  mssql_data:  # Define a persistent volume for the database
+  mssql_data:
