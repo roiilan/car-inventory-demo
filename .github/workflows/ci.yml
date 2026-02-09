@@ -1,0 +1,47 @@
+name: CI - Car Inventory Demo
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Download repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Show docker version (debug)
+      - name: Show Docker version
+        run: docker --version
+
+      # 3. Build and start all services
+      - name: Build and start services
+        run: docker compose up -d --build
+
+      # 4. Wait for database and backend
+      - name: Wait for system startup
+        run: sleep 70
+
+      # 5. Check backend API
+      - name: Check backend API
+        run: |
+          curl -f http://localhost:5000/token
+
+      # 6. Check frontend
+      - name: Check frontend
+        run: |
+          curl -f http://localhost:3000
+
+      # 7. Print logs if something failed
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+
+      # 8. Stop and clean containers
+      - name: Shutdown services
+        if: always()
+        run: docker compose down -v
